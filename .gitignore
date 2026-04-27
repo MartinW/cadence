@@ -10,6 +10,9 @@ DerivedData/
 # Generated
 Cadence/Generated-Info.plist
 
+# Build-time secrets — never commit
+Cadence/Cadence-Secrets.xcconfig
+
 # macOS
 .DS_Store
 

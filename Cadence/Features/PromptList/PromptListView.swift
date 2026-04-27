@@ -3,7 +3,7 @@ import SwiftUI
 @MainActor
 @Observable
 final class PromptListViewModel {
-    enum LoadState: Equatable {
+    enum LoadState {
         case idle
         case loading
         case loaded([PromptMeta])
@@ -28,67 +28,60 @@ final class PromptListViewModel {
 }
 
 struct PromptListView: View {
-    @Environment(SettingsStore.self) private var settings
     @State private var viewModel = PromptListViewModel()
-    @State private var showSettings = false
 
     var body: some View {
         Group {
-            switch viewModel.state {
-            case .idle, .loading:
-                ProgressView("Loading…")
-                    .controlSize(.large)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            case .failed(let message):
-                ErrorState(message: message) {
-                    Task { await reload() }
-                }
-            case .loaded(let prompts) where prompts.isEmpty:
-                ContentUnavailableView(
-                    "No voice prompts",
-                    systemImage: "waveform.slash",
-                    description: Text("Tag a prompt with `voice` (or `voice:*`) in PromptFlow to see it here.")
-                )
-            case .loaded(let prompts):
-                List(prompts) { meta in
-                    NavigationLink(value: meta) {
-                        PromptRow(meta: meta)
-                    }
-                }
-                .refreshable { await reload() }
+            if !AppConfig.shared.isConfigured {
+                MissingConfigView()
+            } else {
+                content
             }
         }
         .navigationTitle("Cadence")
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    showSettings = true
-                } label: {
-                    Image(systemName: "gearshape")
-                }
-                .accessibilityLabel("Settings")
-            }
-        }
         .navigationDestination(for: PromptMeta.self) { meta in
             PromptRunPlaceholderView(meta: meta)
-        }
-        .sheet(isPresented: $showSettings) {
-            NavigationStack {
-                SettingsView()
-                    .toolbar {
-                        ToolbarItem(placement: .topBarLeading) {
-                            Button("Close") { showSettings = false }
-                        }
-                    }
-            }
         }
         .task { await reload() }
     }
 
+    @ViewBuilder
+    private var content: some View {
+        switch viewModel.state {
+        case .idle, .loading:
+            ProgressView("Loading…")
+                .controlSize(.large)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        case .failed(let message):
+            ErrorState(message: message) {
+                Task { await reload() }
+            }
+        case .loaded(let prompts) where prompts.isEmpty:
+            ContentUnavailableView(
+                "No voice prompts",
+                systemImage: "waveform.slash",
+                description: Text("Tag a prompt with `voice` (or `voice:*`) in PromptFlow to see it here.")
+            )
+        case .loaded(let prompts):
+            List(prompts) { meta in
+                NavigationLink(value: meta) {
+                    PromptRow(meta: meta)
+                }
+            }
+            .refreshable { await reload() }
+        }
+    }
+
     private func reload() async {
-        guard settings.isConfigured else { return }
-        await viewModel.load(client: settings.makeLangfuseClient())
+        guard AppConfig.shared.isConfigured else { return }
+        let config = AppConfig.shared
+        let client = LangfuseClient(
+            publicKey: config.langfusePublicKey,
+            secretKey: config.langfuseSecretKey,
+            host: config.langfuseHost
+        )
+        await viewModel.load(client: client)
     }
 }
 
@@ -134,6 +127,27 @@ private struct ErrorState: View {
                 .padding(.horizontal)
             Button("Retry", action: retry)
                 .buttonStyle(.borderedProminent)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+/// Shown when the build has no Cadence-Secrets.xcconfig. Tells the developer
+/// what to do — there's no end-user UX for fixing it because credentials are
+/// build-time-only by design.
+private struct MissingConfigView: View {
+    var body: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "key.slash")
+                .font(.largeTitle)
+                .foregroundStyle(.secondary)
+            Text("Build-time config missing")
+                .font(.headline)
+            Text("Copy `Cadence-Secrets.xcconfig.example` to `Cadence-Secrets.xcconfig`, fill in the keys, and rebuild.")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
