@@ -43,12 +43,18 @@ actor LangfuseClient {
 
     /// Get a specific prompt. With no version/label, defaults to the auto-applied
     /// "latest" label so draft-only prompts still resolve (matching @promptflow/core).
+    ///
+    /// Builds the URL via `URLComponents.percentEncodedPath` rather than
+    /// `appendingPathComponent` because the latter double-encodes any
+    /// pre-encoded `%` (turning `voice:greeting` into `voice%253Agreeting`,
+    /// which Langfuse 404s).
     func getPrompt(name: String, version: Int? = nil, label: String? = nil) async throws -> Prompt {
+        guard var components = URLComponents(url: baseURL, resolvingAgainstBaseURL: true) else {
+            throw LangfuseError.upstream(status: 0, body: "Invalid LANGFUSE_HOST")
+        }
         let encoded = name.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? name
-        var components = URLComponents(
-            url: baseURL.appendingPathComponent("/api/public/v2/prompts/\(encoded)"),
-            resolvingAgainstBaseURL: true
-        )!
+        components.percentEncodedPath = "/api/public/v2/prompts/\(encoded)"
+
         var query: [URLQueryItem] = []
         if let version {
             query.append(URLQueryItem(name: "version", value: String(version)))
@@ -59,7 +65,10 @@ actor LangfuseClient {
         }
         components.queryItems = query
 
-        let request = makeRequest(url: components.url!)
+        guard let url = components.url else {
+            throw LangfuseError.upstream(status: 0, body: "Failed to build prompt URL")
+        }
+        let request = makeRequest(url: url)
         let (data, response) = try await urlSession.data(for: request)
         try validate(response: response, body: data)
         return try JSONDecoder().decode(Prompt.self, from: data)

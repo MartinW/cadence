@@ -2,14 +2,14 @@ import SwiftUI
 
 /// Models for the run flow.
 ///
-/// Locked decisions (per the architecture plan):
-/// - Reasoning model: `anthropic/claude-haiku-4.5` — fastest Claude, lowest
-///   latency-to-first-word for voice. Fixed in code, not user-configurable.
-/// - Audio model: `openai/gpt-4o-audio-preview` via OpenRouter — accepts text
-///   and produces audio bytes in a single call.
+/// Single-step audio-completion via `openai/gpt-4o-audio-preview`. We wanted
+/// "Claude reasoning + audio model reading" but OpenRouter only proxies
+/// `/chat/completions`, and chat models don't have a verbatim-read mode —
+/// they always re-think — so a two-step approach made the audio diverge
+/// from the displayed transcript. The audio model produces both at once,
+/// aligned by construction.
 private enum RunConfig {
-    static let reasoningModel = "anthropic/claude-haiku-4.5"
-    static let audioModel = "openai/gpt-4o-audio-preview"
+    static let model = "openai/gpt-4o-audio-preview"
     static let voice = "alloy"
 }
 
@@ -55,8 +55,10 @@ final class PromptRunViewModel {
         }
     }
 
-    /// Two-step run: Claude → text, then audio model → bytes, then play.
-    /// Stage transitions drive the UI so the user can see progress.
+    /// Single streamed call to the audio model; we get matching transcript +
+    /// audio bytes back. Stage transitions drive the UI so the user can see
+    /// progress: thinking (waiting for first chunk) → speaking (streaming
+    /// in) → played (audio playing).
     func run(openRouter: OpenRouterClient, audioPlayer: AudioPlayer) async {
         guard let prompt else { return }
         stage = .thinking
@@ -65,19 +67,15 @@ final class PromptRunViewModel {
         let messages = renderToChatMessages(prompt: prompt, variables: variableValues)
 
         do {
-            let text = try await openRouter.generateText(
-                model: RunConfig.reasoningModel,
-                messages: messages
-            )
-            self.transcript = text
-            stage = .speaking
-            let audio = try await openRouter.synthesizeAudio(
-                model: RunConfig.audioModel,
-                text: text,
+            let result = try await openRouter.runVoicePrompt(
+                model: RunConfig.model,
+                messages: messages,
                 voice: RunConfig.voice
             )
-            self.audioBytes = audio
-            try audioPlayer.play(data: audio)
+            self.transcript = result.transcript
+            self.audioBytes = result.audioWAV
+            stage = .speaking
+            try audioPlayer.play(data: result.audioWAV)
             stage = .played
         } catch {
             stage = .failed(error.localizedDescription)
@@ -133,6 +131,9 @@ struct PromptRunView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 header
+                if case .failed(let message) = viewModel.stage {
+                    errorBanner(message)
+                }
                 if let prompt = viewModel.prompt {
                     if !prompt.body.variables.isEmpty {
                         variablesSection
@@ -140,9 +141,6 @@ struct PromptRunView: View {
                     actionSection
                     if !viewModel.transcript.isEmpty {
                         transcriptSection
-                    }
-                    if case .failed(let message) = viewModel.stage {
-                        errorBanner(message)
                     }
                 }
             }

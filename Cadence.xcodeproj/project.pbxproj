@@ -18,6 +18,7 @@
 		8006F55E629A70E7ED335961 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 40FEC6F1B63663537E6E73B3 /* Assets.xcassets */; };
 		AA2988103D945B8B56910324 /* LangfuseClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC0434D34F82D00A5995E41D /* LangfuseClient.swift */; };
 		D4616764547A2585A18920BC /* AudioPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 959BBDBD79B454D94DDD8D94 /* AudioPlayer.swift */; };
+		D6B47C4A8BAC2A7B502587B0 /* WAVPacker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CB3D6C9954C603F36643D8F /* WAVPacker.swift */; };
 		F361147639679D8B17064F4F /* CadenceApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72FF55E16B03D2449DCAD218 /* CadenceApp.swift */; };
 /* End PBXBuildFile section */
 
@@ -31,6 +32,7 @@
 		6115F6BD3266E93320192677 /* PromptRunView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PromptRunView.swift; sourceTree = "<group>"; };
 		72FF55E16B03D2449DCAD218 /* CadenceApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CadenceApp.swift; sourceTree = "<group>"; };
 		777C9CF1E5B71DCCF973214E /* Generated-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Generated-Info.plist"; sourceTree = "<group>"; };
+		7CB3D6C9954C603F36643D8F /* WAVPacker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WAVPacker.swift; sourceTree = "<group>"; };
 		959BBDBD79B454D94DDD8D94 /* AudioPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioPlayer.swift; sourceTree = "<group>"; };
 		A658FACFF6C08757604A6B58 /* TemplateRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplateRenderer.swift; sourceTree = "<group>"; };
 		AB702DD6E8E141E8A297025F /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
@@ -43,6 +45,7 @@
 			isa = PBXGroup;
 			children = (
 				5F7445CF8CCF1C80C79B2615 /* OpenRouterClient.swift */,
+				7CB3D6C9954C603F36643D8F /* WAVPacker.swift */,
 			);
 			path = Networking;
 			sourceTree = "<group>";
@@ -196,6 +199,7 @@
 				6FC5EEC34121EAA874086262 /* PromptShape.swift in Sources */,
 				78F3A3DBDCE2819DB76D2530 /* TagNamespace.swift in Sources */,
 				550217CFA67424FC16A38994 /* TemplateRenderer.swift in Sources */,
+				D6B47C4A8BAC2A7B502587B0 /* WAVPacker.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -35,7 +35,8 @@ actor OpenRouterClient {
             model: model,
             messages: messages,
             modalities: nil,
-            audio: nil
+            audio: nil,
+            stream: false
         )
         let response = try await sendChat(body: body)
         guard let text = response.choices.first?.message.content else {
@@ -44,41 +45,93 @@ actor OpenRouterClient {
         return text
     }
 
-    // MARK: - Audio synthesis
+    // MARK: - Voice prompt run (single-step text + audio)
 
-    /// Render `text` as audio.
+    /// Run a voice prompt as a single audio-completion call.
     ///
-    /// The trick to using a reasoning model as a text-to-speech engine is
-    /// telling it to read verbatim — without that instruction it will try to
-    /// "respond" rather than narrate. The system message below is short on
-    /// purpose; longer instructions tend to bleed into the spoken output.
-    func synthesizeAudio(
+    /// Why single-step instead of "Claude reasons → audio model reads"?
+    /// OpenRouter only exposes `/chat/completions`, not OpenAI's dedicated
+    /// `/audio/speech` endpoint, and chat models don't have a verbatim-read
+    /// mode — they always generate a fresh response. So a two-step flow
+    /// produces audio that diverges from the displayed transcript.
+    ///
+    /// We send the prompt's messages straight to the audio model. It
+    /// produces matching transcript + audio bytes in one streamed response,
+    /// which we accumulate together so the UI can show exactly what was
+    /// spoken.
+    ///
+    /// Streaming audio only supports `pcm16` — the bytes we get back are
+    /// raw 24kHz mono signed-16-bit PCM, which we wrap in a WAV header so
+    /// AVAudioPlayer can play them directly.
+    func runVoicePrompt(
         model: String,
-        text: String,
-        voice: String = "alloy",
-        format: String = "wav"
-    ) async throws -> Data {
-        let messages = [
-            ChatMessageInput(
-                role: "system",
-                content: "You are a text-to-speech engine. Read the user's message aloud verbatim, with natural pacing. Do not add commentary, do not paraphrase."
-            ),
-            ChatMessageInput(role: "user", content: text),
-        ]
+        messages: [ChatMessageInput],
+        voice: String = "alloy"
+    ) async throws -> VoiceRunResult {
         let body = ChatRequest(
             model: model,
             messages: messages,
             modalities: ["text", "audio"],
-            audio: AudioConfig(voice: voice, format: format)
+            audio: AudioConfig(voice: voice, format: "pcm16"),
+            stream: true
         )
-        let response = try await sendChat(body: body)
-        guard let audio = response.choices.first?.message.audio else {
-            throw OpenRouterError.malformedResponse("missing message.audio")
+
+        let url = URL(string: "https://openrouter.ai/api/v1/chat/completions")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("text/event-stream", forHTTPHeaderField: "Accept")
+        request.setValue("https://github.com/MartinW/cadence", forHTTPHeaderField: "HTTP-Referer")
+        request.setValue("Cadence", forHTTPHeaderField: "X-Title")
+        request.httpBody = try JSONEncoder().encode(body)
+
+        let (bytes, response) = try await urlSession.bytes(for: request)
+        guard let http = response as? HTTPURLResponse else {
+            throw OpenRouterError.malformedResponse("non-HTTP response")
         }
-        guard let data = Data(base64Encoded: audio.data) else {
-            throw OpenRouterError.malformedResponse("invalid base64 in audio.data")
+        guard (200..<300).contains(http.statusCode) else {
+            var errorBody = ""
+            for try await line in bytes.lines {
+                errorBody.append(line)
+                errorBody.append("\n")
+                if errorBody.count > 2000 { break }
+            }
+            throw OpenRouterError.upstream(status: http.statusCode, body: errorBody)
         }
-        return data
+
+        var audioData = Data()
+        var transcript = ""
+        let decoder = JSONDecoder()
+        for try await line in bytes.lines {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            guard trimmed.hasPrefix("data:") else { continue }
+            let payload = trimmed.dropFirst("data:".count).trimmingCharacters(in: .whitespaces)
+            if payload.isEmpty || payload == "[DONE]" { continue }
+            guard let chunkData = payload.data(using: .utf8) else { continue }
+            guard let chunk = try? decoder.decode(StreamChunk.self, from: chunkData) else {
+                continue
+            }
+            if let delta = chunk.choices.first?.delta?.audio {
+                if let audioBase64 = delta.data,
+                   !audioBase64.isEmpty,
+                   let decoded = Data(base64Encoded: audioBase64) {
+                    audioData.append(decoded)
+                }
+                if let chunkTranscript = delta.transcript, !chunkTranscript.isEmpty {
+                    transcript.append(chunkTranscript)
+                }
+            }
+        }
+
+        if audioData.isEmpty {
+            throw OpenRouterError.malformedResponse("audio stream produced no data")
+        }
+        // OpenAI/OpenRouter return mono 24kHz signed-16-bit-LE PCM. AVAudioPlayer
+        // can't play raw PCM directly — wrap it in a WAV header so it sees a
+        // self-describing audio file.
+        let wav = WAVPacker.wrap(pcmData: audioData, sampleRate: 24_000, channels: 1)
+        return VoiceRunResult(transcript: transcript, audioWAV: wav)
     }
 
     // MARK: - Internal HTTP
@@ -108,6 +161,15 @@ actor OpenRouterClient {
     }
 }
 
+// MARK: - Public results
+
+/// Combined transcript + audio bytes from a voice run. They come from the
+/// same streamed response, so the transcript matches the audio by construction.
+struct VoiceRunResult: Sendable {
+    let transcript: String
+    let audioWAV: Data
+}
+
 // MARK: - Wire types
 
 struct ChatMessageInput: Encodable, Sendable {
@@ -125,6 +187,26 @@ struct ChatRequest: Encodable, Sendable {
     let messages: [ChatMessageInput]
     let modalities: [String]?
     let audio: AudioConfig?
+    var stream: Bool? = nil
+}
+
+/// SSE chunk for streaming audio responses.
+///
+/// Each `data:` line in the stream decodes to one of these. We only care
+/// about the audio bytes; transcript chunks come through too but we already
+/// have the verbatim text from the Claude step.
+struct StreamChunk: Decodable, Sendable {
+    struct Choice: Decodable, Sendable {
+        struct Delta: Decodable, Sendable {
+            struct AudioDelta: Decodable, Sendable {
+                let data: String?
+                let transcript: String?
+            }
+            let audio: AudioDelta?
+        }
+        let delta: Delta?
+    }
+    let choices: [Choice]
 }
 
 struct ChatResponse: Decodable, Sendable {
