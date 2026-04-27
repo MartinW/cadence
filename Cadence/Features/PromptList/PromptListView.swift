@@ -41,7 +41,7 @@ struct PromptListView: View {
         .navigationTitle("Cadence")
         .navigationBarTitleDisplayMode(.inline)
         .navigationDestination(for: PromptMeta.self) { meta in
-            PromptRunPlaceholderView(meta: meta)
+            PromptRunView(meta: meta)
         }
         .task { await reload() }
     }
@@ -153,24 +153,3 @@ private struct MissingConfigView: View {
     }
 }
 
-/// Placeholder for the run flow. Wired in the next iteration alongside the
-/// OpenRouter client + audio playback.
-struct PromptRunPlaceholderView: View {
-    let meta: PromptMeta
-
-    var body: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "waveform")
-                .font(.largeTitle)
-                .foregroundStyle(.secondary)
-            Text(meta.name)
-                .font(.title2.weight(.semibold))
-                .monospaced()
-            Text("Run flow ships in the next iteration.")
-                .foregroundStyle(.secondary)
-        }
-        .padding()
-        .navigationTitle("Run")
-        .navigationBarTitleDisplayMode(.inline)
-    }
-}

@@ -9,12 +9,15 @@
 /* Begin PBXBuildFile section */
 		1A7A8EC7056EA4E0703E2461 /* Generated-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 777C9CF1E5B71DCCF973214E /* Generated-Info.plist */; };
 		35E51F626B061F6192950CAB /* PromptListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E9138AFD63CDBF099DA271D /* PromptListView.swift */; };
+		479832EFA4CBC76DB732EB79 /* OpenRouterClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F7445CF8CCF1C80C79B2615 /* OpenRouterClient.swift */; };
+		48E1A7B672290986EB4D347D /* PromptRunView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6115F6BD3266E93320192677 /* PromptRunView.swift */; };
 		550217CFA67424FC16A38994 /* TemplateRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A658FACFF6C08757604A6B58 /* TemplateRenderer.swift */; };
 		6FC5EEC34121EAA874086262 /* PromptShape.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14FB7E318D50ACB1FA9BCDDB /* PromptShape.swift */; };
 		74DF6DB468CE2F50C6824F49 /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB702DD6E8E141E8A297025F /* AppConfig.swift */; };
 		78F3A3DBDCE2819DB76D2530 /* TagNamespace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C341BF69C339D8E08D84C06 /* TagNamespace.swift */; };
 		8006F55E629A70E7ED335961 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 40FEC6F1B63663537E6E73B3 /* Assets.xcassets */; };
 		AA2988103D945B8B56910324 /* LangfuseClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC0434D34F82D00A5995E41D /* LangfuseClient.swift */; };
+		D4616764547A2585A18920BC /* AudioPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 959BBDBD79B454D94DDD8D94 /* AudioPlayer.swift */; };
 		F361147639679D8B17064F4F /* CadenceApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72FF55E16B03D2449DCAD218 /* CadenceApp.swift */; };
 /* End PBXBuildFile section */
 
@@ -24,8 +27,11 @@
 		2747B5C0BD75EFECA1D2569B /* Cadence.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Cadence.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3C341BF69C339D8E08D84C06 /* TagNamespace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagNamespace.swift; sourceTree = "<group>"; };
 		40FEC6F1B63663537E6E73B3 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		5F7445CF8CCF1C80C79B2615 /* OpenRouterClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenRouterClient.swift; sourceTree = "<group>"; };
+		6115F6BD3266E93320192677 /* PromptRunView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PromptRunView.swift; sourceTree = "<group>"; };
 		72FF55E16B03D2449DCAD218 /* CadenceApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CadenceApp.swift; sourceTree = "<group>"; };
 		777C9CF1E5B71DCCF973214E /* Generated-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Generated-Info.plist"; sourceTree = "<group>"; };
+		959BBDBD79B454D94DDD8D94 /* AudioPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioPlayer.swift; sourceTree = "<group>"; };
 		A658FACFF6C08757604A6B58 /* TemplateRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplateRenderer.swift; sourceTree = "<group>"; };
 		AB702DD6E8E141E8A297025F /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
 		AC0434D34F82D00A5995E41D /* LangfuseClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LangfuseClient.swift; sourceTree = "<group>"; };
@@ -33,6 +39,14 @@
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
+		1B4D5E96FB4C6A308D105451 /* Networking */ = {
+			isa = PBXGroup;
+			children = (
+				5F7445CF8CCF1C80C79B2615 /* OpenRouterClient.swift */,
+			);
+			path = Networking;
+			sourceTree = "<group>";
+		};
 		24C6752CF4D54599A670969D /* PromptList */ = {
 			isa = PBXGroup;
 			children = (
@@ -45,8 +59,18 @@
 			isa = PBXGroup;
 			children = (
 				24C6752CF4D54599A670969D /* PromptList */,
+				3E36A28A9097D4C829C5D607 /* Run */,
 			);
 			path = Features;
+			sourceTree = "<group>";
+		};
+		3E36A28A9097D4C829C5D607 /* Run */ = {
+			isa = PBXGroup;
+			children = (
+				959BBDBD79B454D94DDD8D94 /* AudioPlayer.swift */,
+				6115F6BD3266E93320192677 /* PromptRunView.swift */,
+			);
+			path = Run;
 			sourceTree = "<group>";
 		};
 		55829458FB795F50D2193702 /* PromptFlowKit */ = {
@@ -80,6 +104,7 @@
 			isa = PBXGroup;
 			children = (
 				2D02BEDB698622DC6F020C18 /* Features */,
+				1B4D5E96FB4C6A308D105451 /* Networking */,
 				55829458FB795F50D2193702 /* PromptFlowKit */,
 				AB702DD6E8E141E8A297025F /* AppConfig.swift */,
 				40FEC6F1B63663537E6E73B3 /* Assets.xcassets */,
@@ -162,9 +187,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				74DF6DB468CE2F50C6824F49 /* AppConfig.swift in Sources */,
+				D4616764547A2585A18920BC /* AudioPlayer.swift in Sources */,
 				F361147639679D8B17064F4F /* CadenceApp.swift in Sources */,
 				AA2988103D945B8B56910324 /* LangfuseClient.swift in Sources */,
+				479832EFA4CBC76DB732EB79 /* OpenRouterClient.swift in Sources */,
 				35E51F626B061F6192950CAB /* PromptListView.swift in Sources */,
+				48E1A7B672290986EB4D347D /* PromptRunView.swift in Sources */,
 				6FC5EEC34121EAA874086262 /* PromptShape.swift in Sources */,
 				78F3A3DBDCE2819DB76D2530 /* TagNamespace.swift in Sources */,
 				550217CFA67424FC16A38994 /* TemplateRenderer.swift in Sources */,
