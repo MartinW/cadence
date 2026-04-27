@@ -1,0 +1,22 @@
+# Xcode
+build/
+DerivedData/
+*.xcworkspace/xcuserdata
+*.xcodeproj/xcuserdata
+*.xcodeproj/project.xcworkspace/xcuserdata
+*.swiftpm/
+.swiftpm/
+
+# Generated
+Cadence/Generated-Info.plist
+
+# macOS
+.DS_Store
+
+# Keys (never)
+*.p8
+*.cer
+*.mobileprovision
+
+# Misc
+*.log
