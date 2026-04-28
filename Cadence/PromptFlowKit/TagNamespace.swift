@@ -12,6 +12,7 @@ enum TagNamespace: String, CaseIterable {
     case app
     case lang
     case env
+    case coach
 
     func matches(_ tag: String) -> Bool {
         // A tag belongs to a namespace either as the bare namespace ("voice")
