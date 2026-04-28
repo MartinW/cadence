@@ -47,11 +47,16 @@ enum PromptBody: Hashable {
     }
 }
 
-/// PromptFlow's convention for stashing variable defaults inside Langfuse's
-/// freeform `config` field. We only read `defaults` here; other config keys
-/// (max_tokens etc.) are intentionally ignored on the mobile side.
-struct PromptDefaults: Decodable {
+/// PromptFlow's convention for stashing per-prompt knobs inside Langfuse's
+/// freeform `config` field. We read two keys today:
+///   - `defaults` — pre-fill values for `{{vars}}` (e.g. `user_context`)
+///   - `voice` — preferred OpenAI voice id when this prompt runs in Cadence
+///                (e.g. "onyx" for a fitness coach, "shimmer" for meditation)
+/// Other config keys (max_tokens, temperature, …) are intentionally ignored
+/// on the mobile side.
+struct PromptConfig: Decodable {
     let defaults: [String: String]?
+    let voice: String?
 }
 
 struct Prompt: Decodable, Hashable {
@@ -62,6 +67,7 @@ struct Prompt: Decodable, Hashable {
     let tags: [String]
     let commitMessage: String?
     let defaults: [String: String]
+    let voice: String?
 
     private enum CodingKeys: String, CodingKey {
         case name, version, type, prompt, labels, tags, commitMessage, config
@@ -89,13 +95,15 @@ struct Prompt: Decodable, Hashable {
             )
         }
 
-        // `config` is freeform JSON; we only care about `defaults`. If decoding
-        // the strict PromptDefaults shape fails (e.g. config has non-string
-        // entries), treat as empty rather than failing the whole prompt.
-        if let cfg = try? c.decode(PromptDefaults.self, forKey: .config) {
+        // `config` is freeform JSON. Decode our known fields leniently — if it
+        // contains an exotic shape (e.g. non-string defaults), fall back to
+        // empty rather than failing the whole prompt.
+        if let cfg = try? c.decode(PromptConfig.self, forKey: .config) {
             self.defaults = cfg.defaults ?? [:]
+            self.voice = cfg.voice
         } else {
             self.defaults = [:]
+            self.voice = nil
         }
     }
 }

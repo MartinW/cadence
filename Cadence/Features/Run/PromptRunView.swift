@@ -8,9 +8,12 @@ import SwiftUI
 /// they always re-think — so a two-step approach made the audio diverge
 /// from the displayed transcript. The audio model produces both at once,
 /// aligned by construction.
+///
+/// `defaultVoice` is the fallback when a prompt's `config.voice` isn't set;
+/// authored prompts can pin their own (e.g. "onyx" for a fitness coach).
 private enum RunConfig {
     static let model = "openai/gpt-4o-audio-preview"
-    static let voice = "alloy"
+    static let defaultVoice = "alloy"
 }
 
 @MainActor
@@ -70,7 +73,7 @@ final class PromptRunViewModel {
             let result = try await openRouter.runVoicePrompt(
                 model: RunConfig.model,
                 messages: messages,
-                voice: RunConfig.voice
+                voice: prompt.voice ?? RunConfig.defaultVoice
             )
             self.transcript = result.transcript
             self.audioBytes = result.audioWAV
@@ -138,6 +141,7 @@ struct PromptRunView: View {
                     if !prompt.body.variables.isEmpty {
                         variablesSection
                     }
+                    voiceLabel
                     actionSection
                     if !viewModel.transcript.isEmpty {
                         transcriptSection
@@ -192,6 +196,18 @@ struct PromptRunView: View {
                 )
             }
         }
+    }
+
+    private var voiceLabel: some View {
+        let voice = viewModel.prompt?.voice ?? RunConfig.defaultVoice
+        return HStack(spacing: 6) {
+            Image(systemName: "person.wave.2")
+                .imageScale(.small)
+            Text("voice: \(voice)")
+                .monospaced()
+        }
+        .font(.caption)
+        .foregroundStyle(.secondary)
     }
 
     private var actionSection: some View {
