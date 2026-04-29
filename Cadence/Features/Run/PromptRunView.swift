@@ -73,7 +73,10 @@ final class PromptRunViewModel {
             let result = try await openRouter.runVoicePrompt(
                 model: RunConfig.model,
                 messages: messages,
-                voice: prompt.voice ?? RunConfig.defaultVoice
+                voice: prompt.voice ?? RunConfig.defaultVoice,
+                sessionId: UUID().uuidString,
+                userId: AppConfig.userId,
+                traceName: "voice-prompt"
             )
             self.transcript = result.transcript
             self.audioBytes = result.audioWAV

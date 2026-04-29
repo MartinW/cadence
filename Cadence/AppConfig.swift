@@ -40,6 +40,21 @@ struct AppConfig {
         )
     }()
 
+    /// Stable per-install identifier sent to Langfuse as `user`. Generated on
+    /// first launch and persisted in UserDefaults — placeholder until Cadence
+    /// grows a real account concept, at which point swap this for the real
+    /// user ID at the call site.
+    static let userId: String = {
+        let key = "CadenceUserId"
+        let defaults = UserDefaults.standard
+        if let existing = defaults.string(forKey: key), !existing.isEmpty {
+            return existing
+        }
+        let fresh = UUID().uuidString
+        defaults.set(fresh, forKey: key)
+        return fresh
+    }()
+
     private static func read(_ info: [String: Any], _ key: String) -> String {
         (info[key] as? String) ?? ""
     }

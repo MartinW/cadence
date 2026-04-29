@@ -36,7 +36,10 @@ actor OpenRouterClient {
             messages: messages,
             modalities: nil,
             audio: nil,
-            stream: false
+            stream: false,
+            user: nil,
+            session_id: nil,
+            trace: nil
         )
         let response = try await sendChat(body: body)
         guard let text = response.choices.first?.message.content else {
@@ -63,17 +66,26 @@ actor OpenRouterClient {
     /// Streaming audio only supports `pcm16` — the bytes we get back are
     /// raw 24kHz mono signed-16-bit PCM, which we wrap in a WAV header so
     /// AVAudioPlayer can play them directly.
+    ///
+    /// Observability fields (`sessionId`, `userId`, `traceName`) are forwarded
+    /// to Langfuse via OpenRouter's Broadcast feature.
     func runVoicePrompt(
         model: String,
         messages: [ChatMessageInput],
-        voice: String = "alloy"
+        voice: String = "alloy",
+        sessionId: String,
+        userId: String,
+        traceName: String
     ) async throws -> VoiceRunResult {
         let body = ChatRequest(
             model: model,
             messages: messages,
             modalities: ["text", "audio"],
             audio: AudioConfig(voice: voice, format: "pcm16"),
-            stream: true
+            stream: true,
+            user: userId,
+            session_id: sessionId,
+            trace: TraceMetadata(trace_name: traceName, app: "cadence")
         )
 
         let url = URL(string: "https://openrouter.ai/api/v1/chat/completions")!
@@ -188,6 +200,14 @@ struct ChatRequest: Encodable, Sendable {
     let modalities: [String]?
     let audio: AudioConfig?
     var stream: Bool? = nil
+    let user: String?
+    let session_id: String?
+    let trace: TraceMetadata?
+}
+
+struct TraceMetadata: Encodable, Sendable {
+    let trace_name: String
+    let app: String
 }
 
 /// SSE chunk for streaming audio responses.
