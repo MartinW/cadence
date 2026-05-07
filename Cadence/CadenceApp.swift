@@ -26,7 +26,7 @@ private struct MissingConfigView: View {
                 .foregroundStyle(.secondary)
             Text("Build-time config missing")
                 .font(.headline)
-            Text("Copy `Cadence-Secrets.xcconfig.example` to `Cadence-Secrets.xcconfig`, fill in the keys, and rebuild.")
+            Text("Fill in `Cadence-Secrets.xcconfig` with real keys and rebuild.")
                 .font(.callout)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)

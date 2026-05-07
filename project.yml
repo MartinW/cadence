@@ -20,7 +20,6 @@ targets:
       - path: Cadence
         excludes:
           - "Cadence-Secrets.xcconfig"
-          - "Cadence-Secrets.xcconfig.example"
           - "Info.plist"
     configFiles:
       Debug: Cadence/Cadence-Secrets.xcconfig
