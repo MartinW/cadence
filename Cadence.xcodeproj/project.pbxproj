@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1A7A8EC7056EA4E0703E2461 /* Generated-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 777C9CF1E5B71DCCF973214E /* Generated-Info.plist */; };
 		479832EFA4CBC76DB732EB79 /* OpenRouterClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F7445CF8CCF1C80C79B2615 /* OpenRouterClient.swift */; };
 		48E1A7B672290986EB4D347D /* PromptRunView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6115F6BD3266E93320192677 /* PromptRunView.swift */; };
 		550217CFA67424FC16A38994 /* TemplateRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A658FACFF6C08757604A6B58 /* TemplateRenderer.swift */; };
@@ -33,7 +32,6 @@
 		5F7445CF8CCF1C80C79B2615 /* OpenRouterClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenRouterClient.swift; sourceTree = "<group>"; };
 		6115F6BD3266E93320192677 /* PromptRunView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PromptRunView.swift; sourceTree = "<group>"; };
 		72FF55E16B03D2449DCAD218 /* CadenceApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CadenceApp.swift; sourceTree = "<group>"; };
-		777C9CF1E5B71DCCF973214E /* Generated-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Generated-Info.plist"; sourceTree = "<group>"; };
 		7CB3D6C9954C603F36643D8F /* WAVPacker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WAVPacker.swift; sourceTree = "<group>"; };
 		959BBDBD79B454D94DDD8D94 /* AudioPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioPlayer.swift; sourceTree = "<group>"; };
 		A658FACFF6C08757604A6B58 /* TemplateRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplateRenderer.swift; sourceTree = "<group>"; };
@@ -127,7 +125,6 @@
 				40FEC6F1B63663537E6E73B3 /* Assets.xcassets */,
 				EB7FE83037C4305296E970F3 /* Cadence-Secrets.xcconfig */,
 				72FF55E16B03D2449DCAD218 /* CadenceApp.swift */,
-				777C9CF1E5B71DCCF973214E /* Generated-Info.plist */,
 			);
 			path = Cadence;
 			sourceTree = "<group>";
@@ -192,7 +189,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				8006F55E629A70E7ED335961 /* Assets.xcassets in Resources */,
-				1A7A8EC7056EA4E0703E2461 /* Generated-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

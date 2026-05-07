@@ -20,8 +20,9 @@ Working end-to-end on the iOS Simulator: foundation, voice-namespaced prompt lis
 git clone https://github.com/MartinW/cadence.git
 cd cadence
 
-# Fill in the build-time secrets file (gitignored).
-cp Cadence/Cadence-Secrets.xcconfig.example Cadence/Cadence-Secrets.xcconfig
+# Fill in the build-time secrets file. The committed copy has empty
+# placeholders; mark it skip-worktree so your real keys don't get pushed.
+git update-index --skip-worktree Cadence/Cadence-Secrets.xcconfig
 $EDITOR Cadence/Cadence-Secrets.xcconfig
 
 # Generate the Xcode project.
@@ -33,9 +34,34 @@ Bundle id: `com.eva.cadence` (set in `project.yml`; change for your own builds).
 
 ## How secrets work
 
-Cadence is a personal-use TestFlight-style app, not a multi-user product. Credentials live in `Cadence/Cadence-Secrets.xcconfig` (gitignored), flow into `Info.plist` via `$(VAR)` substitution at build time, and are read at runtime via `AppConfig.shared`. There is no in-app onboarding or Keychain — keys are baked into the build, and the xcconfig keeps them out of source control.
+Cadence is a personal-use TestFlight-style app, not a multi-user product. Credentials live in `Cadence/Cadence-Secrets.xcconfig` (committed with empty placeholders; local copy is `skip-worktree`'d so real keys stay off GitHub), flow into `Info.plist` via `$(VAR)` substitution at build time, and are read at runtime via `AppConfig.shared`. There is no in-app onboarding or Keychain — keys are baked into the build.
 
 If the build is missing the secrets file, the app shows a "Build-time config missing" screen at launch with instructions for the developer.
+
+### Why this pattern (and its sharp edge)
+
+The xcconfig file is **committed**, not gitignored. The earlier `.example`-template pattern was structurally safer (template committed, real file gitignored, no way to leak), but it required a `cp` step on every clone. We collapsed it to a single committed file with empty placeholders + `skip-worktree` for the local edit.
+
+Trade-off: `skip-worktree` is local-only metadata. It does not propagate. Anyone cloning fresh has the flag unset by default, and one `git add -A` (or any tool that bypasses status, like some IDE auto-commit features) can stage real keys. Mitigations:
+
+- After populating real keys, **always** run `git update-index --skip-worktree Cadence/Cadence-Secrets.xcconfig` before any `git add`.
+- Verify with `git ls-files -v | grep '^S'` — the `S` prefix means skip-worktree is set.
+- To temporarily un-skip (e.g. to commit a structural change to the file like a new key):
+  ```bash
+  git update-index --no-skip-worktree Cadence/Cadence-Secrets.xcconfig
+  # edit the placeholder template, commit
+  git update-index --skip-worktree Cadence/Cadence-Secrets.xcconfig
+  ```
+- Treat the keys as **rotatable**. If they ever surface in `git status` or a transcript, rotate at the provider (Langfuse / OpenRouter dashboards) rather than trying to scrub history.
+
+### Adding a new secret key
+
+1. Un-skip-worktree the file.
+2. Add `NEW_KEY =` (empty) to `Cadence/Cadence-Secrets.xcconfig`.
+3. Add a corresponding `<key>CadenceNewKey</key><string>$(NEW_KEY)</string>` entry to `Cadence/Info.plist`.
+4. Add the `let newKey: String` field + `read(info, "CadenceNewKey")` line to `AppConfig.swift`. Add it to `isConfigured`'s required-keys list if it must be non-empty.
+5. Commit (with the empty placeholder).
+6. Re-skip-worktree the file and paste the real value locally.
 
 ## Voice run flow
 
